@@ -18,7 +18,8 @@ class PaleoKetoCli::Scraper
         name = node.css(".entry-title").text
         link = node.css("a.entry-title-link").attr("href").value
         recipe = PaleoKetoCli::Recipe.new(name, link)
-      end unless self.scrape_main.nil?
+      end unless 
+      self.scrape_main.nil?
       !PaleoKetoCli::Recipe.all.empty?
     end
   
@@ -29,7 +30,7 @@ class PaleoKetoCli::Scraper
     def scrape_description
       begin
         file = open(self.recipe.link)
-        Nokogiri::HTML(file).css("div.entry-content p")
+        Nokogiri::HTML(file).css(".wprm-recipe-container").css(".wprm-recipe-summary").css("span").text
       rescue
         puts "Cannot open URL!"
       end
@@ -72,23 +73,7 @@ class PaleoKetoCli::Scraper
       end
     end
   
-    def scrape_prep
-      begin
-        file = open(self.recipe.link)
-        Nokogiri::HTML(file).css(".wprm-recipe-instruction")
-      rescue
-        puts "Cannot open URL!"
-      end
-    end
-  
-    def scrape_prep_notes
-      begin
-        file = open(self.recipe.link)
-        Nokogiri::HTML(file).css(".wprm-recipe-notes-container p")
-      rescue
-        puts "Cannot open URL!"
-      end
-    end
+   
   
   end
   

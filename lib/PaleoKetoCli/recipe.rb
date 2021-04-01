@@ -1,6 +1,6 @@
 
 class PaleoKetoCli::Recipe
-    attr_accessor :name, :description, :link, :ingredients, :prep_steps, :prep_notes
+    attr_accessor :name, :description, :link, :ingredients
   
     @@all = []
   
@@ -8,8 +8,6 @@ class PaleoKetoCli::Recipe
       @name = name
       @link = link
       @ingredients = []
-      @prep_steps = []
-      @prep_notes = []
       @@all << self
     end
   

@@ -35,7 +35,7 @@ class PaleoKetoCli::CLI
           self.select_recipe unless exit
           self.show_recipe_summary unless exit
         when "prep"
-          if !(exit || PaleoKetoCli::Recipe.all.empty?)
+          if !PaleoKetoCli::Recipe.all.empty?
             puts SEPARATOR
             self.show_ingredients_call
             inner_menu_flag = true
@@ -50,7 +50,7 @@ class PaleoKetoCli::CLI
     end
   
     def greeting
-      puts "Welcome to PaleoKetoCli. An excelente source of wonderful vegan recipes."
+      puts "Welcome to PaleoKetoCli. An excellent source of wonderful paleo and keto recipes."
       puts "Information from: veganricha.com!"
     end
   
@@ -64,17 +64,82 @@ class PaleoKetoCli::CLI
       puts "Type main to go back to the beginning."
       puts "Type exit to quit the program."
     end
+
+    def list_month_recipes
+        self.month = nil
+        puts "Please select a month between 2020/01 and 2021/03 or type exit. (months are 01 - 12, if you put above 13 they will still be December)."
+        bad_month = true
+        while bad_month && !self.exit
+          print "> ".colorize(:red)
+          input = gets.chomp
+          if input.match?(/202[0-1]\/\d/)
+            self.month = input
+            puts "Recipes for this month are:"
+            puts SEPARATOR
+            self.get_month_recipes
+            bad_month = false
+          elsif input == "exit"
+           self.exit = true
+          else
+            puts "Please enter a valid month"
+          end
+        end
+      end
+
+      def get_month_recipes
+        PaleoKetoCli::Recipe.reset_all
+        PaleoKetoCli::Scraper.create_by_month(self.month).create_recipes
+        PaleoKetoCli::Recipe.all.each.with_index(1) do |recipe, index|
+          puts "#{index}. #{recipe.name}"
+        end
+      end
+
+      def select_recipe  #sets recipe to an instance
+        if !PaleoKetoCli::Recipe.all.empty?
+          selection = nil
+          puts "Please enter the number of the recipe you wish to get more details: (or type exit)"
+          bad_number = true
+          while bad_number && !self.exit
+            print "> ".colorize(:red)
+            selection = gets.chomp
+            puts SEPARATOR
+            if selection.to_i > 0 && selection.to_i <= PaleoKetoCli::Recipe.all.length
+              bad_number = false
+              self.recipe = PaleoKetoCli::Recipe.all[selection.to_i - 1]
+            elsif selection == "exit"
+              self.exit = true
+            else
+              puts "Please enter a valid selection:"
+            end
+          end
+        end
+      end
+
+      def show_recipe_summary
+        if !self.recipe.nil?
+          self.get_description
+          puts "Name:"
+          puts self.recipe.name
+          puts "Description:"
+          puts self.recipe.description
+        end
+      end
+
+       def get_description
+      self.recipe.description = PaleoKetoCli::Scraper.scrape_by_recipe(self.recipe).add_description
+    end
+
+    def show_ingredients_call
+        self.get_ingredients
+        self.show_ingredients
+      end
   
     def get_ingredients
-      scrapy = PaleoKetoCli::Scraper.scrape_by_recipe(self.recipe)
-      scrapy.add_ingredients
-     
+      scrape = PaleoKetoCli::Scraper.scrape_by_recipe(self.recipe)
+      scrape.add_ingredients
     end
   
-    def show_ingredients_call
-      self.get_ingredients
-      self.show_ingredients
-    end
+ 
   
     def show_ingredients
       puts "Ingredients:"
@@ -91,69 +156,15 @@ class PaleoKetoCli::CLI
   
     
   
-    def show_recipe_summary
-      if !self.recipe.nil?
-        self.get_description
-        puts "Name:"
-        puts self.recipe.name
-        puts "Description:"
-        puts self.recipe.description
-      end
-    end
   
-    def list_month_recipes
-      self.month = nil
-      puts "Please select a month between 2020/01 and 2021/03 or type exit"
-      bad_month = true
-      while bad_month && !self.exit
-        print "> ".colorize(:red)
-        input = gets.chomp
-        if input.match?(/202[0-1]\/[01]\d/)
-          self.month = input
-          puts "Recipes for this month are:"
-          puts SEPARATOR
-          self.get_month_recipes
-          bad_month = false
-        elsif input == "exit"
-         self.exit = true
-        else
-          puts "Please enter a valid month"
-        end
-      end
-    end
   
-    def select_recipe  #sets recipe to an instance
-      if !PaleoKetoCli::Recipe.all.empty?
-        selection = nil
-        puts "Please enter the number of the recipe you wish to get more details: (or type exit)"
-        bad_number = true
-        while bad_number && !self.exit
-          print "> ".colorize(:red)
-          selection = gets.chomp
-          puts SEPARATOR
-          if selection.to_i > 0 && selection.to_i <= PaleoKetoCli::Recipe.all.size  #maybe can abstract it more?
-            bad_number = false
-            self.recipe = PaleoKetoCli::Recipe.all[selection.to_i - 1]
-          elsif selection == "exit"
-            self.exit = true
-          else
-            puts "Please enter a valid selection:"
-          end
-        end
-      end
-    end
+    
   
-    def get_description
-      self.recipe.description = PaleoKetoCli::Scraper.scrape_by_recipe(self.recipe).add_description
-    end
+   
   
-    def get_month_recipes
-      PaleoKetoCli::Recipe.reset_all
-      PaleoKetoCli::Scraper.create_by_month(self.month).create_recipes
-      PaleoKetoCli::Recipe.all.each.with_index(1) do |recipe, index|
-        puts "#{index}. #{recipe.name}"
-      end
-    end
+   
+  
+  
   
   end
   
